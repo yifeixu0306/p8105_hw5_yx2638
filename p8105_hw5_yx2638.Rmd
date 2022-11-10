@@ -25,14 +25,31 @@ homicide = read_csv(url(data_url))
 The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
 
 
-Next, we create a city_state variable and summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+Next, we create a city_state variable and a resolution variable to indicate whether the homicides were solved.
 ```{r}
 homicide_tidy = homicide %>%
-  mutate(city_state = str_c(city, state, sep = ", "))
+  mutate(city_state = str_c(city, state, sep = ", "),
+         resolution = case_when(disposition == "Closed by arrest" ~ "solved",
+                                disposition == "Closed without arrest" ~ "unsolved",
+                                disposition == "Open/No arrest" ~ "unsolved")) %>% 
+  select(city_state, everything()) 
   
 ```
 
+Then summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+```{r}
+# total number of homicides
+homicide_tidy %>%
+  group_by(city_state) %>%
+  summarise(num_homicides = n())
 
+# number of unsolved homicides
+homicide_tidy %>%
+  filter(resolution == "unsolved") %>%
+  group_by(city_state) %>%
+  summarise(num_unsolved_homicides = n())
+
+```
 
 
 
