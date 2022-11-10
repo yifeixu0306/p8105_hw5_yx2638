@@ -58,17 +58,36 @@ bal_summary = bal_homicide %>%
             num_unsolved_homicides = sum(resolved == "unsolved"),
             prop_unsolved_homicides = num_unsolved_homicides/num_homicides) 
 
-city_summary %>% knitr::kable(col.names = c("City", 
-                                            "Total number of homicides", 
-                                            "Number of unsolved homicides",
-                                            "Proportion of homicides that are unsolved"),
-                              caption = "Homicide Summary in Baltimore, MD")
+bal_test = prop.test(x = bal_summary %>% pull(num_unsolved_homicides),
+                     n = bal_summary %>% pull(num_homicides))
 
+est_prop = bal_test %>% broom::tidy() %>%
+  pull(estimate) %>%
+  round(digit = 3)
 
+conf_low = bal_test %>% broom::tidy() %>%
+  pull(conf.low) %>%
+  round(digit = 3)
+
+conf_high = bal_test %>% broom::tidy() %>%
+  pull(conf.high) %>%
+  round(digit = 3)
 
 ```
 
+The estimate proportion of unsolved homicides in Baltimore, MD is `r est_prop` and the confidence interval is `r paste("[", conf_low, ", ", conf_high, "]", sep ="")`.
 
+
+We will run proportion test for each of the cities in the dataset.
+```{r, message=FALSE}
+results_df = 
+  city_summary %>% 
+  mutate(prop_test = map2(.x = num_unsolved_homicides, .y = num_homicides, ~prop.test(x = .x, n = .y)),
+         tidy_test = map(.x = prop_test, ~broom::tidy(.x))) %>% 
+  select(-prop_test) %>% 
+  unnest(tidy_test) %>% 
+  select(city_state, estimate, conf.low, conf.high)
+```
 
 
 
