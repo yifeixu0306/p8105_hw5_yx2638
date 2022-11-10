@@ -25,11 +25,11 @@ homicide = read_csv(url(data_url))
 The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
 
 
-Next, we create a city_state variable and a resolution variable to indicate whether the homicides were solved.
+Next, we create a city_state variable and a resolved variable to indicate whether the homicides were solved.
 ```{r}
 homicide_tidy = homicide %>%
   mutate(city_state = str_c(city, state, sep = ", "),
-         resolution = case_when(disposition == "Closed by arrest" ~ "solved",
+         resolved= case_when(disposition == "Closed by arrest" ~ "solved",
                                 disposition == "Closed without arrest" ~ "unsolved",
                                 disposition == "Open/No arrest" ~ "unsolved")) %>% 
   select(city_state, everything()) 
@@ -38,19 +38,35 @@ homicide_tidy = homicide %>%
 
 Then summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
 ```{r}
-# total number of homicides
-homicide_tidy %>%
+city_summary = homicide_tidy %>%
   group_by(city_state) %>%
-  summarise(num_homicides = n())
+  summarise(num_homicides = n(),
+            num_unsolved_homicides = sum(resolved == "unsolved")) 
 
-# number of unsolved homicides
-homicide_tidy %>%
-  filter(resolution == "unsolved") %>%
-  group_by(city_state) %>%
-  summarise(num_unsolved_homicides = n())
-
+city_summary %>% knitr::kable(col.names = c("City", "Total number of homicides", "Number of unsolved homicides"),
+               caption = "Homicide Summary Within Cities")
 ```
 
+Below is the estimation of the proportion of homicides that are unsolved in Baltimore, MD.
+```{r}
+bal_homicide = homicide_tidy %>%
+  filter(city_state == "Baltimore, MD")
+
+bal_summary = bal_homicide %>%
+  group_by(city_state) %>%
+  summarise(num_homicides = n(),
+            num_unsolved_homicides = sum(resolved == "unsolved"),
+            prop_unsolved_homicides = num_unsolved_homicides/num_homicides) 
+
+city_summary %>% knitr::kable(col.names = c("City", 
+                                            "Total number of homicides", 
+                                            "Number of unsolved homicides",
+                                            "Proportion of homicides that are unsolved"),
+                              caption = "Homicide Summary in Baltimore, MD")
+
+
+
+```
 
 
 
