@@ -10,17 +10,34 @@ library(tidyverse)
 library(purrr)
 library(janitor)
 library(readr)
+library(rvest)
 ```
 
 
 ### Problem 2
 
-First, we read the data from the GitHub repository.
-```{r}
+First, we read the data from the GitHub repository. 
+```{r, message=FALSE}
 data_url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
 
 homicide = read_csv(url(data_url)) 
-
-
 ```
+The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
+
+
+Next, we create a city_state variable and summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+```{r}
+homicide_tidy = homicide %>%
+  mutate(city_state = str_c(city, state, sep = ", "))
+  
+```
+
+
+
+
+
+
+
+
+
 
