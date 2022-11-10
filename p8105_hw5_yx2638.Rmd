@@ -25,7 +25,7 @@ homicide = read_csv(url(data_url))
 The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
 
 
-Next, we create a city_state variable and a resolved variable to indicate whether the homicides were solved. There was observation was misrecorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama.
+Next, we create a city_state variable and a resolved variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama.
 ```{r}
 homicide_tidy = homicide %>%
   mutate(city_state = str_c(city, state, sep = ", "),
@@ -44,8 +44,7 @@ city_summary = homicide_tidy %>%
   summarise(num_homicides = n(),
             num_unsolved_homicides = sum(resolved == "unsolved")) 
 
-city_summary %>% knitr::kable(col.names = c("City", "Total number of homicides", "Number of unsolved homicides"),
-               caption = "Homicide Summary Within Cities")
+city_summary 
 ```
 
 Below is the estimation of the proportion of homicides that are unsolved in Baltimore, MD.
