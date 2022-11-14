@@ -142,9 +142,47 @@ sim_results_df =
   unnest(estimate_dfs)
 ```
 
+Below is a plot showing the proportion of times the null was rejected (the power of the test) on the $y$ axis and the true value of $\mu$ on the $x$ axis.
+```{r}
+sim_results_df %>%
+  group_by(true_mean) %>%
+  summarise(
+    count = n(),
+    rej_num = sum(p_val < 0.05),
+    rej_prop = rej_num/count
+  ) %>%
+  ggplot(aes(x = true_mean, y = rej_prop)) +
+  geom_point() +
+  geom_line() + 
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 6) +
+  labs(
+    title = "Relationship Between Effect Size and Power",
+    x = "True Mean",
+    y = "Power of Test"
+  )
 
+```
 
+Next is a plot showing the average estimate of $\mu$ on the $y$ axis and the true value of $\mu$ on the $x$ axis.
+```{r}
+sim_results_df %>%
+  group_by(true_mean) %>%
+  summarise(
+    avg_mu_hat = mean(mu_hat)
+  ) %>%
+  ggplot(aes(x = true_mean, y = avg_mu_hat)) +
+  geom_point() +
+  geom_line() + 
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 6) +
+  labs(
+    title = "Association Between True Mean and Average Estimate of Mean",
+    x = "True Mean",
+    y = "Average Estimate of Mean"
+  )
 
+```
 
 
 
