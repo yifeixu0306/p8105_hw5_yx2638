@@ -1,6 +1,6 @@
 ---
-title: "p8105_hw5_yx2638"
-author: "Yifei Xu"
+title: "P8105 Homework 5"
+author: "Yifei Xu (yx2638)"
 date: "2022-11-10"
 output: github_document
 ---
@@ -27,7 +27,7 @@ homicide = read_csv(url(data_url))
 The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
 
 
-Next, we create a city_state variable and a resolved variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama.
+Next, we create a `city_state` variable and a `resolved` variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama.
 ```{r}
 homicide_tidy = homicide %>%
   mutate(city_state = str_c(city, state, sep = ", "),
@@ -36,7 +36,6 @@ homicide_tidy = homicide %>%
                                 disposition == "Open/No arrest" ~ "unsolved")) %>% 
   select(city_state, everything()) %>%
   filter(city_state != "Tulsa, AL")
-  
 ```
 
 Then summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
@@ -51,17 +50,10 @@ city_summary
 
 Below is the estimation of the proportion of homicides that are unsolved in Baltimore, MD.
 ```{r}
-bal_homicide = homicide_tidy %>%
-  filter(city_state == "Baltimore, MD")
-
-bal_summary = bal_homicide %>%
-  group_by(city_state) %>%
-  summarise(num_homicides = n(),
-            num_unsolved_homicides = sum(resolved == "unsolved"),
-            prop_unsolved_homicides = num_unsolved_homicides/num_homicides) 
-
-bal_test = prop.test(x = bal_summary %>% pull(num_unsolved_homicides),
-                     n = bal_summary %>% pull(num_homicides))
+bal_test = prop.test(
+  x = city_summary %>% filter(city_state == "Baltimore, MD") %>% pull(num_unsolved_homicides), 
+  n = city_summary %>% filter(city_state == "Baltimore, MD") %>% pull(num_homicides)
+  ) 
 
 bal_test %>% broom::tidy()
 
@@ -86,7 +78,7 @@ The estimate proportion of unsolved homicides in Baltimore, MD is `r est_prop` a
 
 We will run proportion test for each of the cities in the dataset.
 ```{r, warning=FALSE, message=FALSE}
-results_df = 
+cities_test = 
   city_summary %>% 
   mutate(prop_test = map2(.x = num_unsolved_homicides, .y = num_homicides, ~prop.test(x = .x, n = .y)),
          tidy_test = map(.x = prop_test, ~broom::tidy(.x))) %>% 
@@ -94,12 +86,12 @@ results_df =
   unnest(tidy_test) %>% 
   select(city_state, estimate, conf.low, conf.high)
 
-results_df
+cities_test
 ```
 
 Below is a plot that shows the estimates and CIs for each city.
 ```{r}
-results_df %>%
+cities_test %>%
   mutate(city_state = fct_reorder(city_state, estimate)) %>%
   ggplot(aes(x = city_state, y = estimate)) +
   geom_point() +
@@ -107,7 +99,8 @@ results_df %>%
   labs(x = "City",
        y = "Estimate",
        title = "Estimates and Confidence Intervals of Porportion of Unsolved Homicides for Each City") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  theme(plot.title = element_text(size = 12))
 ```
 
 
@@ -115,8 +108,6 @@ results_df %>%
 
 First create the function to generate normally distributed data and conduct t-test.
 ```{r}
-set.seed(1)
-
 sim_t_test = function(n = 30, mu, sigma = 5){
   sim_data = tibble(
     x = rnorm(n, mean = mu, sd = sigma)
@@ -133,18 +124,21 @@ sim_t_test = function(n = 30, mu, sigma = 5){
 
 ```
 
-Then generate 5000 datasets from the model $x \sim Normal[\mu, \sigma]$ and repeat t-test 
+Then generate 5000 datasets from the model $X \sim Normal[\mu, \sigma]$ and repeat t-test 
 ```{r}
+set.seed(1) 
+
 sim_results_df = 
   tibble(true_mean = c(0:6)) %>% 
   mutate(
     output_lists = map(.x = true_mean, ~rerun(5000, sim_t_test(mu = .x))),
-    estimate_dfs = map(output_lists, bind_rows)) %>% 
+    estimate_dfs = map(output_lists, bind_rows)
+    ) %>% 
   select(-output_lists) %>% 
   unnest(estimate_dfs)
 ```
 
-Below is a plot showing the proportion of times the null was rejected (the power of the test) on the $y$ axis and the true value of $\mu$ on the $x$ axis.
+Below is a plot showing the proportion of times the null is rejected (the power of the test) on the $y$ axis and the true value of $\mu$ on the $x$ axis.
 ```{r}
 sim_results_df %>%
   group_by(true_mean) %>%
@@ -156,15 +150,18 @@ sim_results_df %>%
   ggplot(aes(x = true_mean, y = rej_prop)) +
   geom_point() +
   geom_line() + 
+  geom_text(aes(label = round(rej_prop, 3)), vjust = -1, size = 3) + 
   scale_x_continuous(n.breaks = 10) +
   scale_y_continuous(n.breaks = 6) +
   labs(
-    title = "Relationship Between Effect Size and Power",
+    title = "Association Between Effect Size and Power",
     x = "True Mean",
     y = "Power of Test"
   )
 
 ```
+
+From the line plot, we can observe that with the increase of the difference between true mean and 0 (effect size), the proportion of times the null is rejected presents a overall increase trend. It increases sharply at first, and then the increase trend slows down as the proportion closer to 1??. Generally speaking, there is a positive association between the effect size and power of the test, which means the larger the effect size, the greater the power.
 
 Next is a plot showing the average estimate of $\mu$ on the $y$ axis and the true value of $\mu$ on the $x$ axis.
 ```{r}
@@ -176,6 +173,7 @@ sim_results_df %>%
   ggplot(aes(x = true_mean, y = avg_mu_hat)) +
   geom_point() +
   geom_line() + 
+  geom_text(aes(label = round(avg_mu_hat, 3)), vjust = -1, size = 3) + 
   scale_x_continuous(n.breaks = 6) +
   scale_y_continuous(n.breaks = 6) +
   labs(
@@ -203,8 +201,10 @@ sim_results_df %>%
   ggplot(aes(x = true_mean, y = avg_mu_hat_rej, color = "Rejected samples")) +
   geom_point() +
   geom_line() + 
+  geom_text(aes(label = round(avg_mu_hat_rej, 3)), vjust = -1, size = 3) +
   geom_point(data = overall_df, aes(x = true_mean, y = avg_mu_hat, color = "All samples")) +
   geom_line(data = overall_df, aes(x = true_mean, y = avg_mu_hat, color = "All samples")) +  
+  #geom_text(data = overall_df, aes(label = round(avg_mu_hat, 3), color = "All samples"), vjust = -1, size = 3) +
   scale_x_continuous(n.breaks = 6) +
   scale_y_continuous(n.breaks = 6) +
   labs(
@@ -212,11 +212,13 @@ sim_results_df %>%
     x = "True Mean",
     y = "Average Estimate of Mean",
     color = "Type"
-  )
+  ) +
+  scale_color_manual(values = c("All samples" = "black", "Rejected samples" = "red"))
 
 ```
 
-
+From plot above, we can observe that the sample average of $\hat{\mu}$ across tests for all samples is approximately equal to the true value of $\mu$. However, for the sample average of $\hat{\mu}$ across tests for which the null is rejected, it is approximately equal to the true value of $\mu$ when $\mu=4,5,6$ while it is different from the true value of $\mu$ when $\mu=1,2,3$.  
+We reject the null hypothesis when the estimate of mean $\hat{\mu}$ is significantly different from 0. As the true mean gets larger, the effect size becomes larger accordingly, which leads to a higher probability of correctly rejecting the null hypothesis. Therefore, when $\mu=4,5,6$ more samples are correctly rejected, approximately equivalent to the whole samples.
 
 
 
