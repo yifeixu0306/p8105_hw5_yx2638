@@ -32,7 +32,7 @@ full_df =
 
 Then tidy the dataset using string manipulations on the file, converting from wide to long, and selecting relevant variables.
 
-```{r}
+```{r, message=FALSE}
 tidy_df = 
   full_df %>% 
   mutate(
