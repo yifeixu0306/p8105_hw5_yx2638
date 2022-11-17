@@ -170,9 +170,9 @@ sim_t_test = function(n = 30, mu, sigma = 5){
 
 ```
 
-Then generate 5000 datasets from the model $X \sim Normal[\mu, \sigma]$ and repeat t-test 
+Then generate 5000 datasets from the model $X \sim Normal[\mu, \sigma]$ and repeat t-test.yy
 ```{r}
-set.seed(1) 
+set.seed(123) 
 
 sim_results_df = 
   tibble(true_mean = c(0:6)) %>% 
@@ -207,7 +207,7 @@ sim_results_df %>%
 
 ```
 
-From the line plot, we can observe that with the increase of the difference between true mean and 0 (effect size), the proportion of times the null is rejected presents a overall increase trend. It increases sharply at first, and then the increase trend slows down as the proportion closer to 1??. Generally speaking, there is a positive association between the effect size and power of the test, which means the larger the effect size, the greater the power.
+From the line plot, we can observe that with the increase of the difference between true mean and 0 (effect size), the proportion of times the null is rejected presents a overall increase trend. It increases sharply at first, and then the increase trend slows down as the effect size becomes larger and proportion closer to 1. Generally speaking, there is a positive association between the effect size and power of the test, which means the larger the effect size, the greater the power.
 
 Next is a plot showing the average estimate of $\mu$ on the $y$ axis and the true value of $\mu$ on the $x$ axis.
 ```{r}
@@ -263,8 +263,8 @@ sim_results_df %>%
 
 ```
 
-From plot above, we can observe that the sample average of $\hat{\mu}$ across tests for all samples is approximately equal to the true value of $\mu$. However, for the sample average of $\hat{\mu}$ across tests for which the null is rejected, it is approximately equal to the true value of $\mu$ when $\mu=4,5,6$ while it is different from the true value of $\mu$ when $\mu=1,2,3$.  
-We reject the null hypothesis when the estimate of mean $\hat{\mu}$ is significantly different from 0. As the true mean gets larger, the effect size becomes larger accordingly, which leads to a higher probability of correctly rejecting the null hypothesis. Therefore, when $\mu=4,5,6$ more samples are correctly rejected, approximately equivalent to the whole samples.
+From the plot above, we can observe that the sample average of $\hat{\mu}$ across tests for all samples is approximately equal to the true value of $\mu$. However, for the sample average of $\hat{\mu}$ across tests for which the null is rejected, it is approximately equal to the true value of $\mu$ when $\mu=4,5,6$ while it is different from the true value of $\mu$ when $\mu=0,1,2,3$.  
+We reject the null hypothesis when the estimate of mean $\hat{\mu}$ is significantly different from 0. As the true mean gets larger, the effect size becomes larger accordingly, which leads to a higher probability of correctly rejecting the null hypothesis. Therefore, when $\mu=4,5,6$, more samples are correctly rejected (greater power), approximately equivalent to the whole samples, and as a result, the average of $\hat{\mu}$ for rejected samples is approximately equal to the true value of $\mu$.
 
 
 
