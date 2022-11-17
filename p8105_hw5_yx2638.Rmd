@@ -69,7 +69,7 @@ homicide = read_csv(url(data_url))
 ```
 The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition. The reported date, longitude and latitude are numeric variables while others are character, some of which need to be further tidied in the next step. In addition, `r sum(is.na(homicide$lat))` missing values exist in variable `lat` and `r sum(is.na(homicide$lon))` in `lon`.
 
-Next, we create a `city_state` variable and a `resolved` variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama. The `reported_date` is transformed to a proper format.
+Next, we create a `city_state` variable and a `resolved` variable to indicate whether the homicides were solved. There was one observation mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama. The `reported_date` is transformed to a proper format.
 ```{r}
 homicide_tidy = homicide %>%
   janitor::clean_names() %>%
@@ -122,7 +122,7 @@ conf_high = bal_test %>% broom::tidy() %>%
 The estimate proportion of unsolved homicides in Baltimore, MD is `r est_prop` and the confidence interval is `r paste("[", conf_low, ", ", conf_high, "]", sep ="")`.
 
 
-We will run proportion test for each of the cities in the dataset.
+We then run proportion test for each of the cities in the dataset.
 ```{r, warning=FALSE, message=FALSE}
 cities_test = 
   city_summary %>% 
@@ -144,7 +144,7 @@ cities_test %>%
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
   labs(x = "City",
        y = "Estimate",
-       title = "Estimates and Confidence Intervals of Porportion of Unsolved Homicides for Each City") +
+       title = "Estimates and Confidence Intervals of Proportion of Unsolved Homicides for Each City") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   theme(plot.title = element_text(size = 12))
 ```
@@ -170,7 +170,7 @@ sim_t_test = function(n = 30, mu, sigma = 5){
 
 ```
 
-Then generate 5000 datasets from the model $X \sim Normal[\mu, \sigma]$ and repeat t-test.yy
+Then generate 5000 datasets from the model $X \sim Normal[\mu, \sigma]$ and repeat t-test.
 ```{r}
 set.seed(123) 
 
@@ -263,7 +263,7 @@ sim_results_df %>%
 
 ```
 
-From the plot above, we can observe that the sample average of $\hat{\mu}$ across tests for all samples is approximately equal to the true value of $\mu$. However, for the sample average of $\hat{\mu}$ across tests for which the null is rejected, it is approximately equal to the true value of $\mu$ when $\mu=4,5,6$ while it is different from the true value of $\mu$ when $\mu=0,1,2,3$.  
+From the plot above, we can observe that the sample average of $\hat{\mu}$ across tests for all samples is approximately equal to the true value of $\mu$. However, for the sample average of $\hat{\mu}$ across tests for which the null is rejected, it is approximately equal to the true value of $\mu$ when $\mu=4,5,6$, while it is different from the true value of $\mu$ when $\mu=0,1,2,3$.  
 We reject the null hypothesis when the estimate of mean $\hat{\mu}$ is significantly different from 0. As the true mean gets larger, the effect size becomes larger accordingly, which leads to a higher probability of correctly rejecting the null hypothesis. Therefore, when $\mu=4,5,6$, more samples are correctly rejected (greater power), approximately equivalent to the whole samples, and as a result, the average of $\hat{\mu}$ for rejected samples is approximately equal to the true value of $\mu$.
 
 
