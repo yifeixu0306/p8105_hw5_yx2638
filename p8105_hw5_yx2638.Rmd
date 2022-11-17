@@ -67,12 +67,13 @@ data_url = "https://raw.githubusercontent.com/washingtonpost/data-homicides/mast
 
 homicide = read_csv(url(data_url)) 
 ```
-The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition.
+The raw dataset collects data on homicides in 50 large U.S. cities. It has `r nrow(homicide)` observations of homicides and `r ncol(homicide)` key variables represent uid, reported date, victims' last name, first name, race, age, sex, city, state, latitude, longitude, and disposition. The reported date, longitude and latitude are numeric variables while others are character, some of which need to be further tidied in the next step. In addition, `r sum(is.na(homicide$lat))` missing values exist in variable `lat` and `r sum(is.na(homicide$lon))` in `lon`.
 
-
-Next, we create a `city_state` variable and a `resolved` variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama.
+Next, we create a `city_state` variable and a `resolved` variable to indicate whether the homicides were solved. There was one observation was mis-recorded as "Tulsa, AL" and we plan to drop it since Tulsa is the city in the state of Oklahoma rather than Alabama. The `reported_date` is transformed to a proper format.
 ```{r}
 homicide_tidy = homicide %>%
+  janitor::clean_names() %>%
+  mutate(reported_date = as.Date(as.character(reported_date), format = "%Y%m%d")) %>% 
   mutate(city_state = str_c(city, state, sep = ", "),
          resolved= case_when(disposition == "Closed by arrest" ~ "solved",
                                 disposition == "Closed without arrest" ~ "unsolved",
@@ -81,14 +82,16 @@ homicide_tidy = homicide %>%
   filter(city_state != "Tulsa, AL")
 ```
 
-Then summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+Then summarize within cities to obtain the total number of homicides and the number of unsolved homicides. A table is made to show the number.
 ```{r}
 city_summary = homicide_tidy %>%
   group_by(city_state) %>%
   summarise(num_homicides = n(),
             num_unsolved_homicides = sum(resolved == "unsolved")) 
 
-city_summary 
+city_summary %>% 
+  knitr::kable(caption = "Homicides Within Cities ",
+               col.names = c("City", "Total number of homicides", "Number of unsovled homicides"))
 ```
 
 Below is the estimation of the proportion of homicides that are unsolved in Baltimore, MD.
